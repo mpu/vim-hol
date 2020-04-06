@@ -19,19 +19,14 @@ class LineFilter:
     self.buf = lines[-1]
     return b''.join(filter(None, [self.line(l) for l in lines[:-1]]))
 
-def tactrim(tac):
+def holtrim(tac, tacticals=[]):
   """
   strip extra HOL tacticals at the beginning
   and end of a tactic
   """
-  tacticals = [
-    b'THEN', b'THENL', b'THEN1',
-    b'\\', b'>>', b'>-',
-    b',', b' ', b'\n',
-  ]
+  tacticals += [b',', b' ', b'\n']
   tac = bytearray(tac)
-  nop = tac.count(b'(')
-  ncp = tac.count(b')')
+  np = tac.count(b'(') - tac.count(b')')
   while True:
     ltac = len(tac)
     for t in tacticals:
@@ -39,30 +34,45 @@ def tactrim(tac):
         tac[:len(t)] = []
       if tac.endswith(t):
         tac[-len(t):] = []
-    if nop > ncp and tac.startswith(b'('):
+    if np > 0 and tac.startswith(b'('):
       tac[:1] = []
-      nop -= 1
-    if ncp > nop and tac.endswith(b')'):
+      np -= 1
+    if np < 0 and tac.endswith(b')'):
       tac[-1:] = []
-      ncp -= 1
+      np += 1
     if len(tac) == ltac:
       return tac
 
+def slurp(path):
+  try:
+    f = open(bytes(path), 'rb')
+  except IOError:
+    return None
+  else:
+    with f:
+      return f.read()
+
 class HolLight(LineFilter):
+  tacticals = [b'THEN', b'THENL', b'THEN1']
+
   def cancel(self, arg):
     os.kill(self.child, signal.SIGINT)
 
   def tactic(self, arg):
-    return b'e (%s);;\n' % tactrim(arg)
+    data = slurp(arg)
+    if data is not None:
+      return b'e (%s);;\n' % holtrim(data, self.tacticals)
 
   def send(self, arg):
-    return arg + b';;\n'
+    data = slurp(arg)
+    if data is not None:
+      return holtrim(data) + b';;\n'
 
   def line(self, l):
     cmds = {
       ord('c'): self.cancel,
-      ord('s'): self.send,
-      ord('e'): self.tactic,
+      ord('S'): self.send,
+      ord('E'): self.tactic,
       ord('g'): lambda _: b'g ();;\n',
       ord('b'): lambda _: b'b ();;\n',
       ord('p'): lambda _: b'p ();;\n',
