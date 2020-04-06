@@ -2,7 +2,7 @@ if exists("b:did_hol")
   finish
 endif
 
-let s:defaultholpipe = "/tmp/vimholfifo"
+let s:defaultholpipe = "/tmp/holfifo"
 if empty($VIMHOL_FIFO)
   let s:holpipe = s:defaultholpipe
 else
@@ -18,7 +18,7 @@ let s:holnr = bufnr("")
 hide
 
 let s:tmpprefix = "/tmp/vimhol"
-fu! TempName()
+function! TempName()
   let l:n = 0
   while glob(s:tmpprefix.l:n."Message") != ""
     let l:n = l:n + 1
@@ -26,7 +26,7 @@ fu! TempName()
   return s:tmpprefix.l:n."Message"
 endf
 
-fu! HOLCStart()
+function! HOLCStart()
   let s:prev = bufnr("")
   let s:wins = winsaveview()
   silent exe "keepjumps hide bu" s:holnr
@@ -34,13 +34,13 @@ fu! HOLCStart()
   keepjumps %d_
 endf
 
-fu! HOLCRestore()
+function! HOLCRestore()
   silent exe "w>>" . s:holpipe
   silent exe "keepjumps bu" s:prev
   call winrestview(s:wins)
 endf
 
-fu! HOLCEnd(c)
+function! HOLCEnd(c)
   let s:temp = TempName()
   silent exe "w" . s:temp
   keepjumps %d_
@@ -48,13 +48,13 @@ fu! HOLCEnd(c)
   call HOLCRestore()
 endf
 
-fu! HOLSend(c)
+function! HOLSend(c)
   call HOLCStart()
   silent exe "normal i" . a:c
   call HOLCRestore()
 endf
 
-fu! HOLSendFile(c) range
+function! HOLSendFile(c) range
   silent normal gvy
   call HOLCStart()
   silent normal P
@@ -62,7 +62,7 @@ fu! HOLSendFile(c) range
   exe "normal gv\<Esc>"
 endf
 
-fu! HOLSelect(l,r)
+function! HOLSelect(l,r)
   let l:cursor = getpos(".")
   if search(a:l,"Wbc") == 0
     return
@@ -80,20 +80,19 @@ if !(exists("maplocalleader"))
   let maplocalleader = "\\"
 endif
 
-vn <silent> <LocalLeader>e :call HOLSendFile("E")<CR>
-vn <silent> <LocalLeader>s :call HOLSendFile("S")<CR>
-vn <silent> <LocalLeader>g :call HOLSendFile("G")<CR>
+vmap <silent><buffer> <LocalLeader>e :call HOLSendFile("E")<CR>
+vmap <silent><buffer> <LocalLeader>s :call HOLSendFile("S")<CR>
+vmap <silent><buffer> <LocalLeader>g :call HOLSendFile("G")<CR>
 
-nm <silent><expr> <LocalLeader>e "V".maplocalleader."e"
-nm <silent><expr> <LocalLeader>s "V".maplocalleader."s"
-nm <silent><expr> <LocalLeader>g "V".maplocalleader."g"
+nmap <silent><buffer><expr> <LocalLeader>e "V".maplocalleader."e"
+nmap <silent><buffer><expr> <LocalLeader>s "V".maplocalleader."s"
+nmap <silent><buffer><expr> <LocalLeader>g "V".maplocalleader."g"
 
-nn <silent> <LocalLeader>p :call HOLSend("p")<CR>
-nn <silent> <LocalLeader>c :call HOLSend("c")<CR>
-nn <silent> <LocalLeader>t :call HOLSelect('`\\|‘','`\\|’')<CR>
-nn <silent> <LocalLeader>T :call HOLSelect('``\\|“','``\\|”')<CR>
-
-no <LocalLeader>h h
+nmap <silent><buffer> <LocalLeader>b :call HOLSend("b")<CR>
+nmap <silent><buffer> <LocalLeader>c :call HOLSend("c")<CR>
+nmap <silent><buffer> <LocalLeader>p :call HOLSend("p")<CR>
+nmap <silent><buffer> <LocalLeader>r :call HOLSend("r")<CR>
+nmap <silent><buffer> <LocalLeader>t :call HOLSelect('`\\|‘','`\\|’')<CR>
+nmap <silent><buffer> <LocalLeader>T :call HOLSelect('``\\|“','``\\|”')<CR>
 
 let b:did_hol = 1
-" vim: ft=vim

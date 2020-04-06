@@ -26,7 +26,10 @@ def holtrim(tac, tacticals=[]):
   """
   tacticals += [b',', b' ', b'\n']
   tac = bytearray(tac)
-  np = tac.count(b'(') - tac.count(b')')
+  delims = {
+    b'()': tac.count(b'(') - tac.count(b')'),
+    b'[]': tac.count(b'[') - tac.count(b']'),
+  }
   while True:
     ltac = len(tac)
     for t in tacticals:
@@ -34,12 +37,13 @@ def holtrim(tac, tacticals=[]):
         tac[:len(t)] = []
       if tac.endswith(t):
         tac[-len(t):] = []
-    if np > 0 and tac.startswith(b'('):
-      tac[:1] = []
-      np -= 1
-    if np < 0 and tac.endswith(b')'):
-      tac[-1:] = []
-      np += 1
+    for dp, nd in delims.items():
+      if nd > 0 and tac.startswith(dp[:1]):
+        tac[:1] = []
+        delims[dp] -= 1
+      if nd < 0 and tac.endswith(dp[1:]):
+        tac[-1:] = []
+        delims[dp] += 1
     if len(tac) == ltac:
       return tac
 
@@ -53,7 +57,7 @@ def slurp(path):
       return f.read()
 
 class HolLight(LineFilter):
-  tacticals = [b'THEN', b'THENL', b'THEN1']
+  tacticals = [b';;', b'THEN', b'THENL', b'THEN1']
 
   def cancel(self, arg):
     os.kill(self.child, signal.SIGINT)
@@ -63,19 +67,25 @@ class HolLight(LineFilter):
     if data is not None:
       return b'e (%s);;\n' % holtrim(data, self.tacticals)
 
+  def goal(self, arg):
+    data = slurp(arg)
+    if data is not None:
+      return b'g %s;;\n' % holtrim(data)
+
   def send(self, arg):
     data = slurp(arg)
     if data is not None:
-      return holtrim(data) + b';;\n'
+      return holtrim(data, [b';;']) + b';;\n'
 
   def line(self, l):
     cmds = {
-      ord('c'): self.cancel,
       ord('S'): self.send,
       ord('E'): self.tactic,
-      ord('g'): lambda _: b'g ();;\n',
+      ord('G'): self.goal,
+      ord('c'): self.cancel,
       ord('b'): lambda _: b'b ();;\n',
       ord('p'): lambda _: b'p ();;\n',
+      ord('r'): lambda _: b'r 1;;\n',
     }
     try:
       return cmds[l[0]](l[1:])
