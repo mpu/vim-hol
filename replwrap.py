@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 import argparse
+import fcntl
 import os
 import pty
 import select
+import signal
+import struct
 import sys
 import termios
 
@@ -16,8 +19,6 @@ def resettty(fd, attr=None):
   return old
 
 def copysize(ifd, rfd):
-  import fcntl
-  import struct
   s = fcntl.ioctl(ifd, termios.TIOCGWINSZ, b'\x00' * 8)
   (rows, cols) = struct.unpack('HHHH', s)[:2]
   s = struct.pack('HHHH', rows, cols, 0, 0)
@@ -45,6 +46,7 @@ if __name__ == "__main__":
 
   old = resettty(0)
   copysize(1, replfd)
+  signal.signal(signal.SIGWINCH, lambda sig, stk: copysize(1, replfd))
 
   done = False
   while not done:
