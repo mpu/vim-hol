@@ -29,7 +29,7 @@ if __name__ == "__main__":
                    remote-control.""")
   parser.add_argument('-F', dest='filter', default='copy',
     help=('fifo filter (%s)' % ', '.join(filters.keys())))
-  parser.add_argument('-f', dest='fifo', required=True)
+  parser.add_argument('-f', dest='fifo', default='/tmp/replfifo')
   parser.add_argument(
     '-c', dest='cmd', nargs=argparse.REMAINDER, required=True,
     help='command to run')
@@ -44,7 +44,7 @@ if __name__ == "__main__":
   (pid, replfd) = pty.fork()
   if pid == 0:
     try:
-      os.execv(args.cmd[0], args.cmd)
+      os.execvp(args.cmd[0], args.cmd)
       err = 'execv returned'
     except OSError as e:
       err = str(e)

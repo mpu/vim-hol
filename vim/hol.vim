@@ -2,7 +2,7 @@ if exists("b:did_hol")
   finish
 endif
 
-let s:defaultholpipe = "/tmp/holfifo"
+let s:defaultholpipe = "/tmp/replfifo"
 if empty($VIMHOL_FIFO)
   let s:holpipe = s:defaultholpipe
 else

@@ -92,4 +92,4 @@ class HolLight(LineFilter):
     except KeyError:
       return None
 
-filters = {'copy': Copy, 'hollight': HolLight}
+filters = {'copy': Copy, 'hol': HolLight}
