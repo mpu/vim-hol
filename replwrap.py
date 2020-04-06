@@ -7,6 +7,7 @@ import select
 import signal
 import sys
 import termios
+from filter import filters
 
 def resettty(fd, attr=None):
   old = termios.tcgetattr(fd)
@@ -26,11 +27,17 @@ if __name__ == "__main__":
     description="""Runs a command as if it were running directly in
                    the terminal, but provides a fifo for
                    remote-control.""")
+  parser.add_argument('-F', dest='filter', default='copy',
+    help=('fifo filter (%s)' % ', '.join(filters.keys())))
   parser.add_argument('-f', dest='fifo', required=True)
   parser.add_argument(
     '-c', dest='cmd', nargs=argparse.REMAINDER, required=True,
     help='command to run')
   args = parser.parse_args()
+
+  if args.filter not in filters:
+    parser.error('invalid filter: %s' % args.filter)
+  fifofilter = filters[args.filter]()
 
   try:
     os.mkfifo(args.fifo)
@@ -40,8 +47,12 @@ if __name__ == "__main__":
 
   (pid, replfd) = pty.fork()
   if pid == 0:
-    os.execv(args.cmd[0], args.cmd)
-    os.exit(1)
+    try:
+      os.execv(args.cmd[0], args.cmd)
+      err = 'execv returned'
+    except OSError as e:
+      err = str(e)
+    parser.error('could not run command: ' + err)
 
   oldattr = resettty(0)
   copysize(1, replfd)
@@ -65,7 +76,7 @@ if __name__ == "__main__":
       # data from the fifo, send it to the repl
       if f is fifofd:
         data = os.read(fifofd, 1024)
-        os.write(replfd, data)
+        os.write(replfd, fifofilter.filter(data))
 
       # data from stdin, send it to the repl
       if f == 0:
