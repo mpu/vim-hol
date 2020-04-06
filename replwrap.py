@@ -35,10 +35,6 @@ if __name__ == "__main__":
     help='command to run')
   args = parser.parse_args()
 
-  if args.filter not in filters:
-    parser.error('invalid filter: %s' % args.filter)
-  fifofilter = filters[args.filter]()
-
   try:
     os.mkfifo(args.fifo)
   except FileExistsError:
@@ -53,6 +49,10 @@ if __name__ == "__main__":
     except OSError as e:
       err = str(e)
     parser.error('could not run command: ' + err)
+
+  if args.filter not in filters:
+    parser.error('invalid filter: %s' % args.filter)
+  fifofilter = filters[args.filter](pid)
 
   oldattr = resettty(0)
   copysize(1, replfd)
