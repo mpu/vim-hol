@@ -5,7 +5,6 @@ import os
 import pty
 import select
 import signal
-import struct
 import sys
 import termios
 
@@ -15,36 +14,36 @@ def resettty(fd, attr=None):
     attr = old[:]
     attr[3] = attr[3] & ~termios.ICANON
     attr[3] = attr[3] & ~termios.ECHO
-  termios.tcsetattr(fd, termios.TCSADRAIN, attr)
+  termios.tcsetattr(fd, termios.TCSANOW, attr)
   return old
 
 def copysize(ifd, rfd):
   s = fcntl.ioctl(ifd, termios.TIOCGWINSZ, b'\x00' * 8)
-  (rows, cols) = struct.unpack('HHHH', s)[:2]
-  s = struct.pack('HHHH', rows, cols, 0, 0)
   fcntl.ioctl(rfd, termios.TIOCSWINSZ, s)
 
 if __name__ == "__main__":
-  parser = argparse.ArgumentParser(description='wrap a repl command')
-  parser.add_argument('-f', dest='fifo', type=str)
-  parser.add_argument('-c', dest='cmd', nargs=argparse.REMAINDER)
+  parser = argparse.ArgumentParser(
+    description="""Runs a command as if it were running directly in
+                   the terminal, but provides a fifo for
+                   remote-control.""")
+  parser.add_argument('-f', dest='fifo', required=True)
+  parser.add_argument(
+    '-c', dest='cmd', nargs=argparse.REMAINDER, required=True,
+    help='command to run')
   args = parser.parse_args()
-
-  if args.fifo is None or args.cmd is None:
-    raise Exception('both -f and -c arguments are required')
 
   try:
     os.mkfifo(args.fifo)
   except FileExistsError:
     pass
-  fifofd = os.open(args.fifo, os.O_RDONLY | os.O_NONBLOCK)
+  fifofd = os.open(args.fifo, os.O_RDONLY|os.O_NONBLOCK)
 
   (pid, replfd) = pty.fork()
   if pid == 0:
     os.execv(args.cmd[0], args.cmd)
     os.exit(1)
 
-  old = resettty(0)
+  oldattr = resettty(0)
   copysize(1, replfd)
   signal.signal(signal.SIGWINCH, lambda sig, stk: copysize(1, replfd))
 
@@ -57,11 +56,10 @@ if __name__ == "__main__":
       if f is replfd:
         try:
           data = os.read(replfd, 1024)
-          if not data:
-            done = True
         except OSError:
-          done = True
           data = b''
+        if not data:
+          done = True
         os.write(1, data)
 
       # data from the fifo, send it to the repl
@@ -76,4 +74,4 @@ if __name__ == "__main__":
           done = True
         os.write(replfd, data)
 
-  resettty(0, old)
+  resettty(0, oldattr)
