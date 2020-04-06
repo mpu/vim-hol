@@ -57,7 +57,7 @@ def slurp(path):
       return f.read()
 
 class HolLight(LineFilter):
-  tacticals = [b';;', b'THEN', b'THENL', b'THEN1']
+  tacticals = [b';;', b'THEN', b'THENL']
 
   def cancel(self, arg):
     os.kill(self.child, signal.SIGINT)
@@ -73,9 +73,7 @@ class HolLight(LineFilter):
       return b'g %s;;\n' % holtrim(data)
 
   def send(self, arg):
-    data = slurp(arg)
-    if data is not None:
-      return holtrim(data, [b';;']) + b';;\n'
+    return b'#use "%s";;\n' % arg
 
   def line(self, l):
     cmds = {
