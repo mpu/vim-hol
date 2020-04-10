@@ -44,7 +44,7 @@ def main():
 
   if args.filter not in filters:
     parser.error('invalid filter: %s' % args.filter)
-  fifofilter = filters[args.filter](pid)
+  fifofilter = filters[args.filter]()
 
   tty.setraw(0)
   copysize(1, replfd)

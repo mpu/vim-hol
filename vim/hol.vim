@@ -96,6 +96,7 @@ vmap <silent><buffer> <LocalLeader>h :call HOLSendPaste("h")<CR>
 nmap <silent><buffer><expr> <LocalLeader>e "V".maplocalleader."e"
 nmap <silent><buffer><expr> <LocalLeader>s "V".maplocalleader."s"
 nmap <silent><buffer><expr> <LocalLeader>g "V".maplocalleader."g"
+nmap <silent><buffer><expr> <LocalLeader>h "viw".maplocalleader."h"
 
 nmap <silent><buffer> <LocalLeader>b :call HOLSend("b")<CR>
 nmap <silent><buffer> <LocalLeader>c :call HOLSend("c")<CR>

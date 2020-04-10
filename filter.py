@@ -2,15 +2,11 @@ import os
 import signal
 
 class Copy:
-  def __init__(self, child):
-    pass
-
   def filter(self, data):
     return data
 
 class LineFilter:
-  def __init__(self, child):
-    self.child = child
+  def __init__(self):
     self.buf = bytearray()
 
   def filter(self, data):
@@ -59,9 +55,6 @@ def slurp(path):
 class HolLight(LineFilter):
   tacticals = [b';;', b'THEN', b'THENL']
 
-  def cancel(self, arg):
-    os.kill(self.child, signal.SIGINT)
-
   def tactic(self, arg):
     data = slurp(arg)
     if data is not None:
@@ -80,7 +73,7 @@ class HolLight(LineFilter):
       ord('S'): self.send,
       ord('E'): self.tactic,
       ord('G'): self.goal,
-      ord('c'): self.cancel,
+      ord('c'): lambda _: b'\x03',
       ord('b'): lambda _: b'b ();;\n',
       ord('p'): lambda _: b'p ();;\n',
       ord('r'): lambda _: b'r 1;;\n',
