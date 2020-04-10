@@ -84,6 +84,7 @@ class HolLight(LineFilter):
       ord('b'): lambda _: b'b ();;\n',
       ord('p'): lambda _: b'p ();;\n',
       ord('r'): lambda _: b'r 1;;\n',
+      ord('h'): lambda x: b'help "%s";;\n' % x,
     }
     try:
       return cmds[l[0]](l[1:])

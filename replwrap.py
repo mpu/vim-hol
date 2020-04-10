@@ -7,22 +7,14 @@ import select
 import signal
 import sys
 import termios
+import tty
 from filter import filters
-
-def resettty(fd, attr=None):
-  old = termios.tcgetattr(fd)
-  if attr is None:
-    attr = old[:]
-    attr[3] = attr[3] & ~termios.ICANON
-    attr[3] = attr[3] & ~termios.ECHO
-  termios.tcsetattr(fd, termios.TCSANOW, attr)
-  return old
 
 def copysize(ifd, rfd):
   s = fcntl.ioctl(ifd, termios.TIOCGWINSZ, b'\x00' * 8)
   fcntl.ioctl(rfd, termios.TIOCSWINSZ, s)
 
-if __name__ == "__main__":
+def main():
   parser = argparse.ArgumentParser(
     description="""Runs a command as if it were running directly in
                    the terminal, but provides a fifo for
@@ -39,7 +31,7 @@ if __name__ == "__main__":
     os.mkfifo(args.fifo)
   except FileExistsError:
     pass
-  fifofd = os.open(args.fifo, os.O_RDONLY|os.O_NONBLOCK)
+  fifofd = os.open(args.fifo, os.O_RDWR|os.O_NONBLOCK)
 
   (pid, replfd) = pty.fork()
   if pid == 0:
@@ -54,7 +46,7 @@ if __name__ == "__main__":
     parser.error('invalid filter: %s' % args.filter)
   fifofilter = filters[args.filter](pid)
 
-  oldattr = resettty(0)
+  tty.setraw(0)
   copysize(1, replfd)
   signal.signal(signal.SIGWINCH, lambda sig, stk: copysize(1, replfd))
 
@@ -85,4 +77,9 @@ if __name__ == "__main__":
           done = True
         os.write(replfd, data)
 
-  resettty(0, oldattr)
+if __name__ == "__main__":
+  ttyattr = termios.tcgetattr(0)
+  try:
+    main()
+  finally:
+    termios.tcsetattr(0, termios.TCSANOW, ttyattr)

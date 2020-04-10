@@ -1,6 +1,6 @@
-if exists("b:did_hol")
-  finish
-endif
+"if exists("b:did_hol")
+"  finish
+"endif
 
 let s:defaultholpipe = "/tmp/replfifo"
 if empty($VIMHOL_FIFO)
@@ -54,6 +54,14 @@ function! HOLSend(c)
   call HOLCRestore()
 endf
 
+function! HOLSendPaste(c)
+  silent normal gvy
+  call HOLCStart()
+  silent exe "normal i" . a:c
+  silent normal p
+  call HOLCRestore()
+endf
+
 function! HOLSendFile(c) range
   silent normal gvy
   call HOLCStart()
@@ -83,6 +91,7 @@ endif
 vmap <silent><buffer> <LocalLeader>e :call HOLSendFile("E")<CR>
 vmap <silent><buffer> <LocalLeader>s :call HOLSendFile("S")<CR>
 vmap <silent><buffer> <LocalLeader>g :call HOLSendFile("G")<CR>
+vmap <silent><buffer> <LocalLeader>h :call HOLSendPaste("h")<CR>
 
 nmap <silent><buffer><expr> <LocalLeader>e "V".maplocalleader."e"
 nmap <silent><buffer><expr> <LocalLeader>s "V".maplocalleader."s"
