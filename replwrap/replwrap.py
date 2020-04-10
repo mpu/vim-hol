@@ -21,10 +21,11 @@ def main():
                    remote-control.""")
   parser.add_argument('-F', dest='filter', default='copy',
     help=('fifo filter (%s)' % ', '.join(filters.keys())))
-  parser.add_argument('-f', dest='fifo', default='/tmp/replfifo')
-  parser.add_argument(
-    '-c', dest='cmd', nargs=argparse.REMAINDER, required=True,
-    help='command to run')
+  parser.add_argument('-f', dest='fifo', default='/tmp/replfifo',
+    help='the fifo file (defaults to /tmp/replfifo)')
+  parser.add_argument('cmd', metavar='CMD',
+    help='command to run wrapped')
+  parser.add_argument('args', metavar='ARG', nargs='*')
   args = parser.parse_args()
 
   try:
@@ -36,7 +37,7 @@ def main():
   (pid, replfd) = pty.fork()
   if pid == 0:
     try:
-      os.execvp(args.cmd[0], args.cmd)
+      os.execvp(args.cmd, [args.cmd] + args.args)
       err = 'execv returned'
     except OSError as e:
       err = str(e)
