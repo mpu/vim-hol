@@ -1,7 +1,7 @@
-## Interactive HOL-Light in VIM
+## Interactive HOL Light in vim
 
 The interactive mode is composed of a python wrapper for
-HOL and a buffer-local VIM mode providing key bindings
+HOL and a buffer-local vim mode providing key bindings
 to interact with the live toplevel.
 
 To install it, try:
@@ -36,15 +36,15 @@ or word is sent.
 Commands that accept input:
 
   - `\e` sends a tactic, stripping unbalanced parentheses and
-    tacticals like THEN (current line)
-  - `\s` sends raw ML code (current word); it is convenient to
-    see the statement of a theorem from its name, for example
-    run it on ONE to see `|- 1 = SUC 0`
+    tacticals like THEN
+  - `\s` sends raw ML code; it is convenient to see the statement
+    of a theorem from its name, for example run it on ONE to see
+    `|- 1 = SUC 0`
   - `\g` sends a quoted formula as new goal on the goalstack,
     see HOL's help for `g` (using `\h`)
-  - `\h` shows help for the selected text (current word); it
-    is a convenient way to pop HOL's documentation, for
-    example run it on REWRITE_TAC or prove
+  - `\h` shows help for the selected text; it is a nice way to
+    pop HOL's built-in documentation, for example try it on
+    REWRITE_TAC or prove
 
 Control commands:
 
