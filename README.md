@@ -6,7 +6,7 @@ to interact with the live toplevel.
 
 To install it, try:
 
-    sudo ln -s replwrap/replwrap.py /usr/local/bin/replwrap
+    sudo ln -s `pwd`/replwrap/replwrap.py /usr/local/bin/replwrap
     mkdir -p ~/.vim
     cp vim/hol.vim ~/.vim
     echo ":command HOL :source $HOME/.vim/hol.vim" >> ~/.vim/vimrc
@@ -35,16 +35,10 @@ or word is sent.
 
 Commands that accept input:
 
-  - `\e` sends a tactic, stripping unbalanced parentheses and
-    tacticals like THEN
-  - `\s` sends raw ML code; it is convenient to see the statement
-    of a theorem from its name, for example run it on ONE to see
-    `|- 1 = SUC 0`
-  - `\g` sends a quoted formula as new goal on the goalstack,
-    see HOL's help for `g` (using `\h`)
-  - `\h` shows help for the selected text; it is a nice way to
-    pop HOL's built-in documentation, for example try it on
-    REWRITE_TAC or prove
+  - `\e` sends the line as tactic (strips THEN, unbalenced parens, ...)
+  - `\s` sends the word as ML code
+  - `\g` sends the line formula to `g`
+  - `\h` shows help for a word
 
 Control commands:
 
@@ -55,5 +49,4 @@ Control commands:
 
 Selection commands:
 
-  - `\t` selects the enclosing quotation; convenient to use
-    before `\g`
+  - `\t` selects the enclosing quotation
