@@ -9,7 +9,7 @@ To install it, try:
     sudo ln -s `pwd`/replwrap/replwrap.py /usr/local/bin/replwrap
     mkdir -p ~/.vim
     cp vim/hol.vim ~/.vim
-    echo ":command HOL :source $HOME/.vim/hol.vim" >> ~/.vim/vimrc
+    echo "command HOL source $HOME/.vim/hol.vim" >> ~/.vim/vimrc
 
 Interactive editing is done with two windows (or tmux panes),
 one for the source file openned in vim and the other with the
