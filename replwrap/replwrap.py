@@ -42,6 +42,7 @@ def main():
     except OSError as e:
       err = str(e)
     parser.error('could not run command: ' + err)
+  os.set_blocking(replfd, False)
 
   if args.filter not in filters:
     parser.error('invalid filter: %s' % args.filter)
@@ -51,9 +52,18 @@ def main():
   copysize(1, replfd)
   signal.signal(signal.SIGWINCH, lambda sig, stk: copysize(1, replfd))
 
+  writes = []
   done = False
   while not done:
-    rd = select.select([replfd, fifofd, 0], [], [])[0]
+    wrset = [replfd] if writes else []
+    rd, wr = select.select([replfd, fifofd, 0], wrset, [])[0:2]
+
+    # flush pending writes on replfd
+    if wr:
+      buf = writes.pop()
+      n = os.write(replfd, buf)
+      if n < len(buf):
+        writes.append(buf[n:])
 
     for f in rd:
       # data from the repl, send it to stdout
@@ -69,14 +79,14 @@ def main():
       # data from the fifo, send it to the repl
       if f is fifofd:
         data = os.read(fifofd, 1024)
-        os.write(replfd, fifofilter.filter(data))
+        writes.append(fifofilter.filter(data))
 
       # data from stdin, send it to the repl
       if f == 0:
         data = os.read(0, 1024)
         if not data:
           done = True
-        os.write(replfd, data)
+        writes.append(data)
 
 if __name__ == "__main__":
   ttyattr = termios.tcgetattr(0)

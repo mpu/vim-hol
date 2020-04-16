@@ -20,10 +20,10 @@ hide
 let s:tmpprefix = "/tmp/vimhol"
 function! TempName()
   let l:n = 0
-  while glob(s:tmpprefix.l:n."Message.ml") != ""
+  while glob(s:tmpprefix.l:n) != ""
     let l:n = l:n + 1
   endwhile
-  return s:tmpprefix.l:n."Message.ml"
+  return s:tmpprefix.l:n
 endf
 
 function! HOLCStart()
