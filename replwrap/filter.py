@@ -20,7 +20,7 @@ def holtrim(tac, tacticals=[]):
   strip extra HOL tacticals at the beginning
   and end of a tactic
   """
-  tacticals += [b',', b' ', b'\n']
+  tacticals += [b';', b',', b' ', b'\n']
   tac = bytearray(tac)
   delims = {
     b'()': tac.count(b'(') - tac.count(b')'),
@@ -53,7 +53,7 @@ def slurp(path):
       return f.read()
 
 class HolLight(LineFilter):
-  tacticals = [b';;', b'THEN', b'THENL']
+  tacticals = [b'THEN', b'THENL']
 
   def tactic(self, arg):
     data = slurp(arg)
